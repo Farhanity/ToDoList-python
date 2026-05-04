@@ -63,3 +63,4 @@ while command != "Выход":
         case "Вывести_Выполоненные":
             l.print_completed_tasks()
 
+
