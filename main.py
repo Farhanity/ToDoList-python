@@ -4,7 +4,6 @@ class Task:
     def __init__(self, title, comment):
         self.title = title
         self.comment = comment
-        self.done = False
 
     def change_title(self, new_title):
         if self.title != new_title:
@@ -18,9 +17,6 @@ class Task:
         if self.comment:
             print(':', self.comment)
 
-    def complete(self):
-        self.done = True
-
     def get_title(self):
         print(self.title)
 
@@ -28,14 +24,14 @@ class Task:
         print(self.comment)
 
     def get_description(self):
-        print(f'{self.title}: {self.comment if self.comment else '(Нет описания)'}')
+        print(f'{self.title}: {self.comment if self.comment else "(Нет описания)"}')
 
 class To_Do_List:
     def __init__(self):
         self.current_tasks = {}
         self.completed_tasks = {}
 
-    def add_task(self, title, comments = ''):
+    def add_task(self, title, comment = ''):
         if title in self.current_tasks:
             print("Такая задача уже существует!")
         else:
@@ -74,25 +70,67 @@ class To_Do_List:
 l = To_Do_List()
 
 
-## добавить парсинг одинаковых команд и так далее
-## можно сделать интерактивный вывод в консоли с помощью inquirer
+# идея: выводить рандомные n текущих задач
 
-command = ''
-while command != "Выход":
-    command = input().split(maxsplit=1)
-    cmd = command.pop(0)
+# добавить вывод описания задания
+# добавить изменение задач
+
+print('Для того, чтобы добавить описание задачи, после названия задачи введите ": "')
+
+while True:
+    command = input()
+
     if command:
-        rest = command[0].split(": ")
-        title, comment = rest[0], '' if len(rest) == 1 else rest[1]
+        command = command.split(maxsplit=1)
+    else:
+        print("Пустой ввод!")
+        continue
 
-    match cmd:
-        case "Добавить":
-            l.add_task(title, comment)
-        case "Выполнить":
-            l.complete_task(title)
-        case "Вывести_Текущие":
-            l.print_current_tasks()
-        case "Вывести_Выполоненные":
-            l.print_completed_tasks()
+    if len(command) == 1:
+        cmd = command[0]
+        rest = ''
+        title = ''
+        comment = ''
+    elif len(command) > 1:
+        cmd = command[0]
+        rest = command[1]
+        if ": " in rest:
+            title, comment = rest.split(": ", maxsplit=1)
+        else:
+            title = rest
+            comment = ''
+
+    match cmd.lower():
+        case "добавить":
+            if title:
+                l.add_task(title, comment)
+            else:
+                print("Название не может быть пустым!")
+
+        case "выполнить":
+            if title:
+                l.complete_task(title)
+
+            else:
+                print("Нельзя выполнить пустое задание!")
+
+        case "вывести_текущие":
+            if rest:
+                print("Лишние аргументы!")
+            else:
+                l.print_current_tasks()
+        case "вывести_выполненные":
+            if rest:
+                print("Лишние аргументы!")
+            else:
+                l.print_completed_tasks()
+        case "выход":
+            if rest:
+                print("Лишние аргументы!")
+            else:
+                print("Выход из приложения")
+                break
+        case _:
+            print("Такой команды не существует!")
 
 
