@@ -71,14 +71,14 @@ l = To_Do_List()
 
 print('Для того, чтобы добавить описание задачи, после названия задачи введите ": "')
 
-while True:
-    command = input()
+def parse_command(text):
+    command = text
 
     if command:
         command = command.split(maxsplit=1)
     else:
         print("Пустой ввод!")
-        continue
+        return
 
     if len(command) == 1:
         cmd = command[0]
@@ -99,7 +99,7 @@ while True:
             if title:
                 l.add_task(title, comment)
             else:
-                print("Название не может быть пустым!")
+                return "Название не может быть пустым!"
 
         case "выполнить":
             if title:
