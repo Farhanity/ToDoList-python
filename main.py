@@ -1,4 +1,5 @@
 # To-do list
+import database
 
 class Task:
     def __init__(self, title, comment):
@@ -68,17 +69,21 @@ class To_Do_List:
 
 
 l = To_Do_List()
+base = database.ToDoDatabase()
+base.connect()
+base.init_tables()
+
 
 print('Для того, чтобы добавить описание задачи, после названия задачи введите ": "')
 
-def parse_command(text):
-    command = text
+while True:
+    command = input()
 
     if command:
         command = command.split(maxsplit=1)
     else:
         print("Пустой ввод!")
-        return
+        continue
 
     if len(command) == 1:
         cmd = command[0]
@@ -98,12 +103,14 @@ def parse_command(text):
         case "добавить":
             if title:
                 l.add_task(title, comment)
+                base.add_task(title, comment)
             else:
-                return "Название не может быть пустым!"
+                print("Название не может быть пустым!")
 
         case "выполнить":
             if title:
                 l.complete_task(title)
+                base.complete_task(title)
 
             else:
                 print("Нельзя выполнить пустое задание!")
@@ -113,18 +120,25 @@ def parse_command(text):
                 print("Лишние аргументы!")
             else:
                 l.print_current_tasks()
+                print(base.get_tasks_not_done())
+
         case "вывести_выполненные":
             if rest:
                 print("Лишние аргументы!")
             else:
                 l.print_completed_tasks()
+                print(base.get_tasks_done())
+
         case "выход":
             if rest:
                 print("Лишние аргументы!")
             else:
                 print("Выход из приложения")
+                base.close()
                 break
         case _:
             print("Такой команды не существует!")
+
+print('Все данные сохранены в базе данных)')
 
 

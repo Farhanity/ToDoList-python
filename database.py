@@ -24,8 +24,6 @@ class ToDoDatabase:
         self.close()
 
     def init_tables(self):
-        self.cur.execute('DROP TABLE IF EXISTS tasks')
-        self.cur.execute('DROP TABLE IF EXISTS users')
 
         self.cur.execute('''CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,7 +32,6 @@ class ToDoDatabase:
                     )
         ''')
 
-        self.cur.execute('DROP TABLE IF EXISTS tasks')
         self.cur.execute('''CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
@@ -60,23 +57,29 @@ class ToDoDatabase:
         self.cur.execute('INSERT INTO tasks (user_id, task, comment) VALUES (?, ?,?)', (user_id, task, comment))
         self.conn.commit()
 
-    def get_tasks(self):
-        self.cur.execute('SELECT * FROM tasks')
+    def get_tasks_not_done(self):
+        self.cur.execute('SELECT * FROM tasks WHERE done == 0')
         return self.cur.fetchall()
+
+    def get_tasks_done(self):
+        self.cur.execute('SELECT * from tasks WHERE done == 1')
+
+    def complete_task(self, title):
+        self.cur.execute('UPDATE tasks SET done = 1 WHERE title LIKE "?"', (title))
 
     def get_tasks_of(self, user_id):
         self.cur.execute('SELECT * FROM tasks WHERE user_id == ?', (user_id,))
         return self.cur.fetchall()
 
+if __name__ == '__main__':
+    with ToDoDatabase() as db:
+        db.init_tables()
 
-with ToDoDatabase() as db:
-    db.init_tables()
+        db.add_user('farhat', 'Fa050505__')
+        db.add_user('aaa', 'sdjfllsjf')
 
-    db.add_user('farhat', 'Fa050505__')
-    db.add_user('aaa', 'sdjfllsjf')
+        db.add_task(1, 'aaa', '')
+        db.add_task(2, 'hellp', 'by')
+        db.add_task(1, 'hiii', 'bye')
 
-    db.add_task(1, 'aaa', '')
-    db.add_task(2, 'hellp', 'by')
-    db.add_task(1, 'hiii', 'bye')
-
-    print(db.get_tasks_of(1))
+        print(db.get_tasks_of(1))
