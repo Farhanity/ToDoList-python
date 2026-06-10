@@ -68,15 +68,52 @@ class To_Do_List:
             print("Список выполненных задач пустой. Вам это ни о чем не говорит? 🙂")
 
 
+
+# инициализация списка и базы данных
 l = To_Do_List()
 base = database.ToDoDatabase()
 base.connect()
 base.init_tables()
 
+print("\n" + "="*40)
+print("1. Регистрация")
+print("2. Вход")
+print("3. Выход")
+print("="*40)
 
-print('Для того, чтобы добавить описание задачи, после названия задачи введите ": "')
-
+flag = 1
 while True:
+    choice = input("Выберите действие: ")
+
+    if choice == "1":
+        username = input("Придумайте логин: ")
+        password = input("Придумайте пароль: ")
+        user_id = base.register_user(username, password)
+        if user_id:
+            current_user_id = user_id
+            break
+
+    elif choice == "2":
+        username = input("Логин: ")
+        password = input("Пароль: ")
+        user_id = base.login_user(username, password)
+        if user_id:
+            current_user_id = user_id
+            break
+
+    elif choice == "3":
+        print("До свидания!")
+        base.close()
+        flag = 0
+        break
+
+    else:
+        print("Неверный выбор!")
+
+if flag:
+    print('Для того, чтобы добавить описание задачи, после названия задачи введите ": "')
+
+while flag:
     command = input()
 
     if command:
@@ -103,14 +140,14 @@ while True:
         case "добавить":
             if title:
                 l.add_task(title, comment)
-                base.add_task(title, comment)
+                base.add_task(current_user_id, title, comment)
             else:
                 print("Название не может быть пустым!")
 
         case "выполнить":
             if title:
                 l.complete_task(title)
-                base.complete_task(title)
+                base.complete_task(user_id, title)
 
             else:
                 print("Нельзя выполнить пустое задание!")
@@ -119,26 +156,21 @@ while True:
             if rest:
                 print("Лишние аргументы!")
             else:
-                l.print_current_tasks()
-                print(base.get_tasks_not_done())
+                print(base.get_tasks_of_not_done(current_user_id))
 
         case "вывести_выполненные":
             if rest:
                 print("Лишние аргументы!")
             else:
-                l.print_completed_tasks()
-                print(base.get_tasks_done())
+                print(base.get_tasks_of_done(current_user_id))
 
         case "выход":
             if rest:
                 print("Лишние аргументы!")
             else:
                 print("Выход из приложения")
+                print('Все данные сохранены в базе данных)')
                 base.close()
                 break
         case _:
             print("Такой команды не существует!")
-
-print('Все данные сохранены в базе данных)')
-
-

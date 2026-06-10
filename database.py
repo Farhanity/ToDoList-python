@@ -1,6 +1,8 @@
 import sqlite3
 
 class ToDoDatabase:
+
+
     def __init__(self, db_name = 'todo.db'):
         self.name = db_name
         self.conn = None
@@ -24,11 +26,13 @@ class ToDoDatabase:
         self.close()
 
     def init_tables(self):
+        # self.cur.execute('DROP TABLE IF EXISTS tasks')
+        # self.cur.execute('DROP TABLE IF EXISTS users')
 
         self.cur.execute('''CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT NOT NULL UNIQUE,
-                    password TEXT NOT NULL UNIQUE
+                    password TEXT NOT NULL
                     )
         ''')
 
@@ -43,18 +47,13 @@ class ToDoDatabase:
         ''')
 
         self.conn.commit()
-        print('Tables created 🙂')
-
-    def add_user(self, name, password):
-        self.cur.execute('INSERT INTO users (username, password) VALUES (?, ?)', (name, password))
-        self.conn.commit()
 
     def get_users(self):
         self.cur.execute('SELECT * FROM users')
         return self.cur.fetchall()
 
-    def add_task(self, user_id, task, comment):
-        self.cur.execute('INSERT INTO tasks (user_id, task, comment) VALUES (?, ?,?)', (user_id, task, comment))
+    def add_task(self, user_id, task, comment = ''):
+        self.cur.execute('INSERT INTO tasks (user_id, task, comment) VALUES (?, ?, ?)', (user_id, task, comment))
         self.conn.commit()
 
     def get_tasks_not_done(self):
@@ -64,22 +63,68 @@ class ToDoDatabase:
     def get_tasks_done(self):
         self.cur.execute('SELECT * from tasks WHERE done == 1')
 
-    def complete_task(self, title):
-        self.cur.execute('UPDATE tasks SET done = 1 WHERE title LIKE "?"', (title))
+    def complete_task(self, user_id, title):
+        self.cur.execute('UPDATE tasks SET done = 1 WHERE task LIKE ? AND user_id == ?', (title, user_id))
 
-    def get_tasks_of(self, user_id):
-        self.cur.execute('SELECT * FROM tasks WHERE user_id == ?', (user_id,))
+    def get_tasks_of_not_done(self, user_id):
+        self.cur.execute('SELECT * FROM tasks WHERE user_id == ? and done == 0', (user_id,))
         return self.cur.fetchall()
+
+    def get_tasks_of_done(self, user_id):
+        self.cur.execute('SELECT * FROM tasks WHERE user_id == ? and doen == 1', (user_id,))
+        return self.cur.fetchall()
+
+    def register_user(self, username, password):
+        """Регистрация нового пользователя"""
+        # Проверяем, что поля не пустые
+        if not username or not password:
+            print("Логин и пароль обязательны!")
+            return None
+
+        # Проверяем, не занят ли username
+        self.cur.execute('SELECT id FROM users WHERE username = ?', (username,))
+        if self.cur.fetchone():
+            print(f"Пользователь '{username}' уже существует!")
+            return None
+
+        try:
+            # Создаём нового пользователя
+            self.cur.execute(
+                'INSERT INTO users (username, password) VALUES (?, ?)',
+                (username, password)
+            )
+            self.conn.commit()
+            user_id = self.cur.lastrowid
+            print(f"Регистрация успешна! Ваш ID: {user_id}")
+            return user_id
+        except Exception as e:
+            print(f"Ошибка регистрации: {e}")
+            return None
+
+    def login_user(self, username, password):
+        """Авторизация пользователя"""
+        # Проверяем, что поля не пустые
+        if not username or not password:
+            print("Логин и пароль обязательны!")
+            return None
+
+        # Ищем пользователя
+        self.cur.execute(
+            'SELECT id FROM users WHERE username = ? AND password = ?',
+            (username, password)
+        )
+        user = self.cur.fetchone()
+
+        if user:
+            print(f"Добро пожаловать, {username}!")
+            return user[0]  # Возвращаем id
+        else:
+            print("Неверный логин или пароль!")
+            return None
 
 if __name__ == '__main__':
     with ToDoDatabase() as db:
         db.init_tables()
 
-        db.add_user('farhat', 'Fa050505__')
-        db.add_user('aaa', 'sdjfllsjf')
-
-        db.add_task(1, 'aaa', '')
-        db.add_task(2, 'hellp', 'by')
-        db.add_task(1, 'hiii', 'bye')
-
-        print(db.get_tasks_of(1))
+        id1 = db.register_user('farhat', 'Fa050505__')
+        print(id1)
