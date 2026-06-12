@@ -26,9 +26,6 @@ class ToDoDatabase:
         self.close()
 
     def init_tables(self):
-        # self.cur.execute('DROP TABLE IF EXISTS tasks')
-        # self.cur.execute('DROP TABLE IF EXISTS users')
-
         self.cur.execute('''CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT NOT NULL UNIQUE,
@@ -55,13 +52,6 @@ class ToDoDatabase:
     def add_task(self, user_id, task, comment = ''):
         self.cur.execute('INSERT INTO tasks (user_id, task, comment) VALUES (?, ?, ?)', (user_id, task, comment))
         self.conn.commit()
-
-    def get_tasks_not_done(self):
-        self.cur.execute('SELECT * FROM tasks WHERE done == 0')
-        return self.cur.fetchall()
-
-    def get_tasks_done(self):
-        self.cur.execute('SELECT * from tasks WHERE done == 1')
 
     def check_task(self, user_id, title):
         self.cur.execute('SELECT * FROM tasks WHERE user_id == ? AND task LIKE ?', (user_id, title))

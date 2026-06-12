@@ -3,8 +3,6 @@ import database
 
 class To_Do_List:
     def __init__(self):
-        self.current_tasks = {}
-        self.completed_tasks = {}
         self.base = database.ToDoDatabase()
 
     def connect_db(self):
@@ -21,7 +19,7 @@ class To_Do_List:
         self.user_id = self.base.login_user(username, password)
 
     def add_task(self, title, comment = ''):
-        if title in self.current_tasks:
+        if self.base.check_task(self.user_id, title):
             print("Такая задача уже существует!")
         else:
             self.base.add_task(self.user_id, title, comment)
