@@ -63,15 +63,24 @@ class ToDoDatabase:
     def get_tasks_done(self):
         self.cur.execute('SELECT * from tasks WHERE done == 1')
 
+    def check_task(self, user_id, title):
+        self.cur.execute('SELECT * FROM tasks WHERE user_id == ? AND task LIKE ?', (user_id, title))
+        res = self.cur.fetchall()
+        if res:
+            return 1
+
+        return 0
+
     def complete_task(self, user_id, title):
         self.cur.execute('UPDATE tasks SET done = 1 WHERE task LIKE ? AND user_id == ?', (title, user_id))
+        self.conn.commit()
 
     def get_tasks_of_not_done(self, user_id):
         self.cur.execute('SELECT * FROM tasks WHERE user_id == ? and done == 0', (user_id,))
         return self.cur.fetchall()
 
     def get_tasks_of_done(self, user_id):
-        self.cur.execute('SELECT * FROM tasks WHERE user_id == ? and doen == 1', (user_id,))
+        self.cur.execute('SELECT * FROM tasks WHERE user_id == ? and done == 1', (user_id,))
         return self.cur.fetchall()
 
     def register_user(self, username, password):
@@ -126,5 +135,6 @@ if __name__ == '__main__':
     with ToDoDatabase() as db:
         db.init_tables()
 
-        id1 = db.register_user('farhat', 'Fa050505__')
-        print(id1)
+        id1 = db.login_user('farhat', 'Fa050505__')
+
+        db.complete_task(1, 'покормить собаку')

@@ -1,79 +1,65 @@
 # To-do list
 import database
 
-class Task:
-    def __init__(self, title, comment):
-        self.title = title
-        self.comment = comment
-
-    def change_title(self, new_title):
-        if self.title != new_title:
-            self.title = new_title
-
-    def set_comment(self, comment): # даже если одинаковое описание, можно так делать
-        self.comment = comment
-
-    def print_task(self):
-        print(self.title, end='')
-        if self.comment:
-            print(':', self.comment)
-
-    def get_title(self):
-        print(self.title)
-
-    def get_comment(self):
-        print(self.comment)
-
-    def get_description(self):
-        print(f'{self.title}: {self.comment if self.comment else "(Нет описания)"}')
-
 class To_Do_List:
     def __init__(self):
         self.current_tasks = {}
         self.completed_tasks = {}
+        self.base = database.ToDoDatabase()
+
+    def connect_db(self):
+        self.base.connect()
+        self.base.init_tables()
+
+    def close_db(self):
+        self.base.close()
+
+    def register(self, username, password):
+        self.user_id = self.base.register_user(username, password)
+
+    def login(self, username, password):
+        self.user_id = self.base.login_user(username, password)
 
     def add_task(self, title, comment = ''):
         if title in self.current_tasks:
             print("Такая задача уже существует!")
         else:
-            new_task = Task(title, comment)
-            self.current_tasks[title] = new_task
+            self.base.add_task(self.user_id, title, comment)
             print("Новая задача создана!")
 
     def complete_task(self, title):
-        if title in self.current_tasks:
-            completed_task = self.current_tasks.pop(title)
-            self.completed_tasks[title] = completed_task
+        if self.base.check_task(self.user_id, title):
+            self.base.complete_task(self.user_id, title)
             print("Задача выполнена!")
 
         else:
-            print("Такой задачи не существует или она уже выполнена.")
+            print('Такой задачи не существует или она уже выполнена.')
 
     def print_current_tasks(self):
-        if self.current_tasks:
-            print(f'Текущие задачи (всего {len(self.current_tasks)}):')
-            for key in self.current_tasks:
-                task = self.current_tasks[key]
-                task.get_description()
-        else:
-            print("Список задач пустой!")
+        fetch = self.base.get_tasks_of_not_done(self.user_id)
+        if not fetch:
+            print('Список задач пустой!')
+            return
+
+        print(f'Текущие задачи (всего {len(fetch)}):')
+        for item in fetch:
+            print(f'{item[2]}: {item[3] if item[3] else "(Нет описания)"}')
 
     def print_completed_tasks(self):
-        if self.completed_tasks:
-            print(f'Выполненные задачи (всего {len(self.completed_tasks)})')
-            for key in self.completed_tasks:
-                task = self.completed_tasks[key]
-                task.get_description()
-        else:
+        fetch = self.base.get_tasks_of_done(self.user_id)
+        if not fetch:
             print("Список выполненных задач пустой. Вам это ни о чем не говорит? 🙂")
+            return
+
+        print(f'Выполненные задачи (всего {len(fetch)})')
+        for item in fetch:
+            print(f'{item[2]}: {item[3] if item[3] else "(Нет описания)"}')
 
 
 
 # инициализация списка и базы данных
 l = To_Do_List()
-base = database.ToDoDatabase()
-base.connect()
-base.init_tables()
+l.connect_db()
 
 print("\n" + "="*40)
 print("1. Регистрация")
@@ -88,22 +74,18 @@ while True:
     if choice == "1":
         username = input("Придумайте логин: ")
         password = input("Придумайте пароль: ")
-        user_id = base.register_user(username, password)
-        if user_id:
-            current_user_id = user_id
-            break
+        l.register(username, password)
+        if l.user_id: break
 
     elif choice == "2":
         username = input("Логин: ")
         password = input("Пароль: ")
-        user_id = base.login_user(username, password)
-        if user_id:
-            current_user_id = user_id
-            break
+        l.login(username, password)
+        if l.user_id: break
 
     elif choice == "3":
         print("До свидания!")
-        base.close()
+        l.close_db()
         flag = 0
         break
 
@@ -140,14 +122,12 @@ while flag:
         case "добавить":
             if title:
                 l.add_task(title, comment)
-                base.add_task(current_user_id, title, comment)
             else:
                 print("Название не может быть пустым!")
 
         case "выполнить":
             if title:
                 l.complete_task(title)
-                base.complete_task(user_id, title)
 
             else:
                 print("Нельзя выполнить пустое задание!")
@@ -156,13 +136,13 @@ while flag:
             if rest:
                 print("Лишние аргументы!")
             else:
-                print(base.get_tasks_of_not_done(current_user_id))
+                l.print_current_tasks()
 
         case "вывести_выполненные":
             if rest:
                 print("Лишние аргументы!")
             else:
-                print(base.get_tasks_of_done(current_user_id))
+                l.print_completed_tasks()
 
         case "выход":
             if rest:
@@ -170,7 +150,7 @@ while flag:
             else:
                 print("Выход из приложения")
                 print('Все данные сохранены в базе данных)')
-                base.close()
+                l.close_db()
                 break
         case _:
             print("Такой команды не существует!")
